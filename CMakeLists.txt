@@ -2,8 +2,96 @@ cmake_minimum_required(VERSION 4.2)
 
 project(VulkanRenderer LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(FetchContent)
+
+# Vulkan headers
+set(VULKAN_HEADERS_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(VULKAN_HEADERS_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    VulkanHeaders
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+    GIT_TAG v1.4.350
+)
+
+FetchContent_MakeAvailable(VulkanHeaders)
+
+# Volk - Vulkan function loader
+FetchContent_Declare(
+    volk
+    GIT_REPOSITORY https://github.com/zeux/volk.git
+    GIT_TAG 1.4.350
+)
+
+FetchContent_MakeAvailable(volk)
+
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 3.4
+)
+
+FetchContent_MakeAvailable(glfw)
+
+# GLM
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 1.0.3
+)
+
+FetchContent_MakeAvailable(glm)
+
+# Dear ImGui
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.92.9b
+)
+
+FetchContent_MakeAvailable(imgui)
+
+add_library(imgui STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
+target_include_directories(imgui PUBLIC
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
+
+target_compile_definitions(imgui PUBLIC
+    IMGUI_IMPL_VULKAN_USE_VOLK
+)
+
+target_link_libraries(imgui PUBLIC
+    glfw
+    volk
+)
+
+# Application
 add_executable(VulkanRenderer
     src/main.cpp
 )
 
-target_compile_features(VulkanRenderer PRIVATE cxx_std_23)
+target_link_libraries(VulkanRenderer PRIVATE
+    volk
+    glfw
+    glm::glm
+    imgui
+)
